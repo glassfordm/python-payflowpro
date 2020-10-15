@@ -16,4 +16,4 @@ responses, unconsumed_data = client.sale(credit_card, Amount(amt=15, currency="U
 #customer = CustomerInfo(firstname='Bob Smith')
 #responses, unconsumed_data = client.sale(arc_payment, Amount(amt=15, currency="USD"), extras=[customer])
 
-print responses[0]
+print(responses[0])

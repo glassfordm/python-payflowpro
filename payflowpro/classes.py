@@ -46,14 +46,14 @@ class Field(object):
             
 class CreditCardField(Field):
     def clean(self, value):
-        if isinstance(value, basestring):
+        if isinstance(value, str):
             return re.sub(r'\s', '', value)
         else:
             return value
                 
 class DeclarativeFieldsMetaclass(type):
     def __new__(cls, name, bases, attrs):
-        attrs['base_fields'] = dict([(field_name, attrs.pop(field_name)) for field_name, obj in attrs.items() if isinstance(obj, Field)])
+        attrs['base_fields'] = dict([(field_name, attrs.pop(field_name)) for field_name, obj in list(attrs.items()) if isinstance(obj, Field)])
         new_class = super(DeclarativeFieldsMetaclass, cls).__new__(cls, name, bases, attrs)
         return new_class            
             
@@ -88,16 +88,16 @@ class PayflowProObjectBase(object):
         # deepcopy to allow modification of an instance's fields.
         self.fields = deepcopy(self.base_fields)
         
-        for field, value in data.items():
+        for field, value in list(data.items()):
             self.fields[field].value = value
         
-        for name, value in kwargs.items():
+        for name, value in list(kwargs.items()):
             if not name in self.fields:
                 raise TypeError("__init__() got an unexpected keyword argument '%s'" % name)
             self.fields[name].value = value
     
     def _get_data(self):
-        return dict([(field, obj.value) for field, obj in self.fields.items() if obj.value])
+        return dict([(field, obj.value) for field, obj in list(self.fields.items()) if obj.value])
     data = property(_get_data)
     
     def __getitem__(self, key):
@@ -122,11 +122,11 @@ class PayflowProObjectBase(object):
         return "%s: %s" % (self.__class__.__name__, self.data)
     
     def _get_required_fields(self):
-        return [field for field, obj in self.fields.items() if obj.required]
+        return [field for field, obj in list(self.fields.items()) if obj.required]
     required = property(_get_required_fields)
     
     def _get_optional_fields(self):
-        return [field for field, obj in self.fields.items() if not obj.required]
+        return [field for field, obj in list(self.fields.items()) if not obj.required]
     optional = property(_get_optional_fields)
     
     def _get_errors(self):
@@ -137,14 +137,14 @@ class PayflowProObjectBase(object):
     
     def is_valid(self):
         self._errors = {}
-        for name, field in self.fields.items():
+        for name, field in list(self.fields.items()):
             try:
                 field.is_valid()
-            except ValidationError, e:
+            except ValidationError as e:
                 self._errors[name] = e.message                
     
-class PayflowProObject(PayflowProObjectBase):
-    __metaclass__ = DeclarativeFieldsMetaclass
+class PayflowProObject(PayflowProObjectBase, metaclass=DeclarativeFieldsMetaclass):
+    pass
 
 class CreditCard(PayflowProObject):
     acct = CreditCardField(required=True)

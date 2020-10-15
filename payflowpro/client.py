@@ -16,9 +16,10 @@ limitations under the License.
 """
 import sys, time, re, types, logging
 
-from urllib2 import Request, urlopen, urlparse
+from urllib.request import Request, urlopen
+import urllib.parse as urlparse
 
-from classes import (CreditCard, Amount, Profile, 
+from .classes import (CreditCard, Amount, Profile, 
                      Address, Tracking, Response, parse_parameters)
 
 
@@ -81,7 +82,7 @@ class PayflowProClient(object):
         PARMLIST string value acceptable to the Payflow Pro API.
         """
         args = []
-        for key, value in parameters.items():
+        for key, value in list(parameters.items()):
             if not value is None:
                 # We always use the explicit-length keyname format, to reduce the chance
                 # of requests failing due to unusual characters in parameter values.
@@ -161,7 +162,7 @@ class PayflowProClient(object):
             'Connection': 'close',
             'Content-Type': 'text/namevalue',            
             }
-        self.log.debug(u"Request Headers: %s" % headers)
+        self.log.debug("Request Headers: %s" % headers)
             
         try_count = 0
         results = None
@@ -178,22 +179,22 @@ class PayflowProClient(object):
                 result_parmlist = response.read()
                 response.close()
                 
-                self.log.debug(u"Result text: %s" % result_parmlist)
+                self.log.debug("Result text: %s" % result_parmlist)
                 
                 results = self._parse_parmlist(result_parmlist)
-            except Exception, e:
+            except Exception as e:
                 if try_count < self.MAX_RETRY_COUNT:
-                    self.log.warn(u"API request attempt %s of %s failed" % (try_count, self.MAX_RETRY_COUNT), e)
+                    self.log.warn("API request attempt %s of %s failed" % (try_count, self.MAX_RETRY_COUNT), e)
                 else:
-                    self.log.exception(u"Final API request failed", e)
+                    self.log.exception("Final API request failed", e)
                     raise e
         
-        self.log.debug(u"Parsed PARMLIST: %s" % results)
+        self.log.debug("Parsed PARMLIST: %s" % results)
         
         # Parse results dictionary into a set of PayflowProObjects
         result_objects, unconsumed_data = parse_parameters(results)
-        self.log.debug(u"Result parsed objects: %s" % result_objects)
-        self.log.debug(u"Unconsumed Data: %s" % unconsumed_data)
+        self.log.debug("Result parsed objects: %s" % result_objects)
+        self.log.debug("Unconsumed Data: %s" % unconsumed_data)
         return (result_objects, unconsumed_data)
     
     
@@ -310,7 +311,7 @@ def find_class_in_list(klass, lst):
     Returns the first occurrence of an instance of type `klass` in 
     the given list, or None if no such instance is present.
     """
-    filtered = filter(lambda x: x.__class__ == klass, lst)
+    filtered = [x for x in lst if x.__class__ == klass]
     if filtered:
         return filtered[0]
     return None
@@ -332,4 +333,4 @@ def find_classes_in_list(klasses, lst):
     """
     if not isinstance(klasses, list):
         klasses = [klasses]
-    return tuple(map(lambda klass: find_class_in_list(klass, lst), klasses))
+    return tuple([find_class_in_list(klass, lst) for klass in klasses])
