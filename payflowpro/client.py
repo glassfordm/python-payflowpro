@@ -110,7 +110,7 @@ class PayflowProClient(object):
           A[3]=B&B&C[1]=D  (Here, the value of A is "B&B")
           A[1]=B&C[3]=D=7  (Here, the value of C is "D=7")
         """
-        parmlist = "&" + parmlist
+        parmlist = "&" + parmlist.decode('utf-8')
         name_re = re.compile(r'\&([A-Z0-9_]+)(\[\d+\])?=')
         
         results = {}
@@ -172,7 +172,7 @@ class PayflowProClient(object):
                 
                 request = Request(
                     url = self.url_base, 
-                    data = parmlist, 
+                    data = parmlist.encode('utf-8'), 
                     headers = headers)
                     
                 response = urlopen(request)
